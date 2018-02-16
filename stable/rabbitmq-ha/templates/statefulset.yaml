@@ -18,6 +18,13 @@ spec:
         app: {{ template "rabbitmq-ha.name" . }}
         release: {{ .Release.Name }}
     spec:
+      lifecycle:
+        postStart:
+        exec:
+          command:
+            - "/bin/sh"
+            - "-c"
+            - "export RABBITMQ_NODENAME=rabbit@${HOSTNAME}"
       terminationGracePeriodSeconds: 10
       serviceAccountName: {{ if .Values.rbac.create }}{{ template "rabbitmq-ha.fullname" . }}{{ else }}"{{ .Values.rbac.serviceAccountName }}"{{ end }}
       containers:
@@ -55,8 +62,6 @@ spec:
                   fieldPath: status.podIP
             - name: RABBITMQ_USE_LONGNAME
               value: "true"
-            - name: RABBITMQ_NODENAME
-              value: "rabbit@$(HOSTNAME)"
             - name: K8S_SERVICE_NAME
               value: {{ template "rabbitmq-ha.fullname" . }}
             - name: RABBITMQ_ERLANG_COOKIE
