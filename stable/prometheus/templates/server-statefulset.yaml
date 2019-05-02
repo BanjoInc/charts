@@ -51,6 +51,29 @@ spec:
           subPath: "{{ .Values.server.persistentVolume.subPath }}"
       {{- end }}
       containers:
+        {{- if .Values.gitRepoManager.enabled }}
+        - name: {{ .Values.gitRepoManager.name }}
+          image: "{{ .Values.gitRepoManager.image.repository }}:{{ .Values.gitRepoManager.image.tag }}"
+          imagePullPolicy: "{{ .Values.gitRepoManager.image.pullPolicy }}"
+          command: [ "sh", "-c", "--" ]
+          args:
+            - cd /repo;
+          {{- range .Values.gitRepoManager.repos -}}
+             [ ! -d  /repo/{{ .dir }} ] && mkdir /repo/{{ .dir }} && git clone {{ .url }} /repo/{{ .dir }};
+          {{- end -}}
+             while true; do ls | xargs -P10 -I{} git -C {} pull; sleep 90; done
+          resources:
+{{ toYaml .Values.gitRepoManager.resources | indent 12 }}
+          volumeMounts:
+            - name: {{ .Values.gitRepoManager.volume }}
+              mountPath: /repo
+              readOnly: false
+            {{- if .Values.gitRepoManager.secretKey }}
+            - name: ssh-key
+              mountPath: /root/.ssh/
+              readOnly: false
+            {{- end }}
+        {{- end }}
         - name: {{ template "prometheus.name" . }}-{{ .Values.server.name }}-{{ .Values.configmapReload.name }}
           image: "{{ .Values.configmapReload.image.repository }}:{{ .Values.configmapReload.image.tag }}"
           imagePullPolicy: "{{ .Values.configmapReload.image.pullPolicy }}"
@@ -74,6 +97,11 @@ spec:
               mountPath: {{ .mountPath }}
               subPath: {{ .subPath }}
               readOnly: {{ .readOnly }}
+          {{- end }}
+          {{- range .Values.configmapReload.extraVolumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              readOnly: true
           {{- end }}
         - name: {{ template "prometheus.name" . }}-{{ .Values.server.name }}
           image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
@@ -194,6 +222,12 @@ spec:
         - name: {{ .name }}
           configMap:
             name: {{ .configMap }}
+      {{- end }}
+      {{- if .Values.gitRepoManager.secretKey }}
+        - name: ssh-key
+          secret:
+            defaultMode: 0600
+            secretName: {{ .Values.gitRepoManager.secretKey }}
       {{- end }}
 {{- if .Values.server.extraVolumes }}
 {{ toYaml .Values.server.extraVolumes | indent 8}}

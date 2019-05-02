@@ -280,6 +280,29 @@ configmapReload:
   ##
   resources: {}
 
+## Sync Git Repo
+##
+gitRepoManager:
+  ## If false, gitRepoManager will not be created
+  ##
+  enabled: false
+  name: git-repo-manager
+  image:
+    repository: alpine/git
+    tag: latest
+    pullPolicy: IfNotPresent
+  secretKey: ""
+  volume: ""
+  repos: []
+
+  resources: {}
+  # limits:
+  #   cpu: 10m
+  #   memory: 16Mi
+  # requests:
+  #   cpu: 10m
+  #   memory: 16Mi
+
 initChownData:
   ## If false, data ownership will not be reset at startup
   ## This allows the prometheus-server to be run with an arbitrary user
