@@ -288,8 +288,8 @@ gitRepoManager:
   enabled: false
   name: git-repo-manager
   image:
-    repository: alpine/git
-    tag: latest
+    repository: 646497312978.dkr.ecr.us-east-1.amazonaws.com/devops-utility
+    tag: alpine-git-curl
     pullPolicy: IfNotPresent
   secretKey: ""
   volume: ""

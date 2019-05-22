@@ -61,7 +61,7 @@ spec:
           {{- range .Values.gitRepoManager.repos -}}
              [ ! -d  /repo/{{ .dir }} ] && mkdir /repo/{{ .dir }} && git clone {{ .url }} /repo/{{ .dir }};
           {{- end -}}
-             while true; do ls | xargs -P10 -I{} git -C {} pull; sleep 90; done
+             while true; do RELOAD=$(ls | xargs -P10 -I{} git -C {} pull | grep Updating); echo $RELOAD; [ ! -z "${RELOAD}" ] && curl -Ss -X POST http://localhost:9090/-/reload ; sleep 90; done
           resources:
 {{ toYaml .Values.gitRepoManager.resources | indent 12 }}
           volumeMounts:
